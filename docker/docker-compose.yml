@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  aquarium-analyzer:
+    container_name: aquarium-analyzer
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    
+    devices:
+      - /dev/dri/renderD128:/dev/dri/renderD128
+      - /dev/dri/card0:/dev/dri/card0
+    
+    group_add:
+      - video
+      - render
+    
+    volumes:
+      - /mnt/aquarium_photos:/media/photos:ro
+      - ./config/analyzer_config.yaml:/app/config.yaml:ro
+    
+    environment:
+      - MQTT_BROKER=192.168.1.50
+      - MQTT_PORT=1883
+      - MQTT_USER=
+      - MQTT_PASS=
+      - PHOTO_PATH=/media/photos
+      - LIBVA_DRIVER_NAME=i965
+      - LIBVA_DRIVERS_PATH=/usr/lib/x86_64-linux-gnu/dri
+      - OPENCV_OPENCL_DEVICE=Intel
+      - OCL_ICD_ENABLE_TRACE=0
+      - CL_CONFIG_USE_VECTORIZER=True
+    
+    networks:
+      - default
+
+networks:
+  default:
+    driver: bridge
