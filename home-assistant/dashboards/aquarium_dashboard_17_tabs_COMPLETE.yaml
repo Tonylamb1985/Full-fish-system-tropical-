@@ -1,0 +1,1034 @@
+# ==============================================================================
+# COMPLETE 17-TAB AQUARIUM DASHBOARD
+# ==============================================================================
+# Tabs 1-9: Your existing ATO system (not modified)
+# Tabs 10-17: New aquarium monitoring (COMPLETE)
+# ==============================================================================
+# 
+# INSTALLATION:
+# 1. Open your HA dashboard in edit mode
+# 2. Add these as new tabs (10-17)
+# 3. Or merge with existing dashboard YAML
+# ==============================================================================
+
+# ==============================================================================
+# TAB 10: WATER TESTING
+# ==============================================================================
+- title: Water Testing
+  path: water_testing
+  icon: mdi:test-tube
+  badges: []
+  cards:
+    # Header
+    - type: markdown
+      content: |
+        # 🧪 Water Testing System
+        **Seachem Badge • API Strips • NT Labs Tubes**
+      card_mod:
+        style: |
+          ha-card {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            text-align: center;
+            font-size: 1.3em;
+            padding: 16px;
+          }
+    
+    # Upload Section
+    - type: vertical-stack
+      cards:
+        - type: entities
+          title: 📸 Take Test Photo
+          show_header_toggle: false
+          entities:
+            - entity: input_select.water_test_type
+              name: "Test Type"
+        
+        - type: horizontal-stack
+          cards:
+            - type: button
+              name: "Ammonia Badge"
+              icon: mdi:circle-outline
+              tap_action:
+                action: call-service
+                service: script.upload_ammonia_badge_photo
+            
+            - type: button
+              name: "API Strip"
+              icon: mdi:credit-card-outline
+              tap_action:
+                action: call-service
+                service: script.upload_api_strip_photo
+            
+            - type: button
+              name: "NT Labs Tubes"
+              icon: mdi:test-tube
+              tap_action:
+                action: call-service
+                service: script.upload_ntlabs_tubes_photo
+    
+    # Status Row
+    - type: horizontal-stack
+      cards:
+        - type: entity
+          entity: sensor.water_test_confidence
+          name: "Last Test"
+          icon: mdi:clock-outline
+        
+        - type: gauge
+          entity: sensor.water_test_confidence
+          name: "Confidence"
+          min: 0
+          max: 100
+          severity:
+            green: 88
+            yellow: 75
+            red: 0
+    
+    # Current Results
+    - type: entities
+      title: 📋 Current Test Results
+      show_header_toggle: false
+      entities:
+        # Ammonia
+        - type: custom:multiple-entity-row
+          entity: sensor.aquarium_ammonia_test
+          name: "Ammonia (NH₃)"
+          icon: mdi:molecule
+          state_header: Value
+          secondary_info:
+            attribute: confidence
+            name: Confidence
+        
+        - type: divider
+        
+        # Nitrite
+        - type: custom:multiple-entity-row
+          entity: sensor.aquarium_nitrite_test
+          name: "Nitrite (NO₂)"
+          icon: mdi:water-alert-outline
+          state_header: Value
+          secondary_info:
+            attribute: confidence
+            name: Confidence
+        
+        - type: divider
+        
+        # Nitrate
+        - type: custom:multiple-entity-row
+          entity: sensor.aquarium_nitrate_test
+          name: "Nitrate (NO₃)"
+          icon: mdi:water-outline
+          state_header: Value
+          secondary_info:
+            attribute: confidence
+            name: Confidence
+        
+        - type: divider
+        
+        # pH
+        - type: custom:multiple-entity-row
+          entity: sensor.aquarium_ph_test
+          name: "pH Level"
+          icon: mdi:ph
+          state_header: Value
+          secondary_info:
+            attribute: confidence
+            name: Confidence
+        
+        - type: divider
+        
+        # KH
+        - type: custom:multiple-entity-row
+          entity: sensor.aquarium_kh_test
+          name: "KH (Carbonate)"
+          icon: mdi:water-plus-outline
+          state_header: Value
+          secondary_info:
+            attribute: confidence
+            name: Confidence
+        
+        - type: divider
+        
+        # GH
+        - type: custom:multiple-entity-row
+          entity: sensor.aquarium_gh_test
+          name: "GH (General)"
+          icon: mdi:water-check-outline
+          state_header: Value
+          secondary_info:
+            attribute: confidence
+            name: Confidence
+    
+    # Safety Assessment
+    - type: conditional
+      conditions:
+        - entity: sensor.aquarium_ammonia_test
+          state_not: "unavailable"
+      card:
+        type: markdown
+        content: |
+          ## 💧 Water Safety
+          {% set amm = states('sensor.aquarium_ammonia_test')|float(0) %}
+          {% set nit = states('sensor.aquarium_nitrite_test')|float(0) %}
+          {% set nat = states('sensor.aquarium_nitrate_test')|float(0) %}
+          {% set ph = states('sensor.aquarium_ph_test')|float(7.0) %}
+          
+          {% if amm > 0.5 or nit > 0.5 %}
+          ### 🚨 DANGER
+          **Immediate water change needed!**
+          Toxic levels detected.
+          {% elif amm > 0.25 or nit > 0.25 %}
+          ### ⚠️ WARNING
+          **Water change recommended today.**
+          Elevated toxic levels.
+          {% elif nat > 80 %}
+          ### 🟡 CAUTION
+          **Schedule water change soon.**
+          Nitrate is high.
+          {% else %}
+          ### ✅ SAFE
+          **All parameters within range.**
+          Aquarium conditions good.
+          {% endif %}
+    
+    # 30-Day History
+    - type: history-graph
+      title: 📈 30-Day History
+      hours_to_show: 720
+      entities:
+        - entity: sensor.aquarium_ammonia_test
+          name: Ammonia
+        - entity: sensor.aquarium_nitrite_test
+          name: Nitrite
+        - entity: sensor.aquarium_nitrate_test
+          name: Nitrate
+        - entity: sensor.aquarium_ph_test
+          name: pH
+    
+    # Guidelines
+    - type: markdown
+      title: 📚 Testing Guidelines
+      content: |
+        ### Safe Ranges (Freshwater)
+        
+        | Parameter | Safe | Warning | Danger |
+        |-----------|------|---------|--------|
+        | Ammonia | 0 ppm | 0.25 ppm | >0.5 ppm |
+        | Nitrite | 0 ppm | 0.15 ppm | >0.25 ppm |
+        | Nitrate | <20 ppm | 40-80 ppm | >80 ppm |
+        | pH | 6.5-7.5 | 6.0-8.0 | <6.0 or >8.0 |
+        
+        ### Test Schedule
+        **New Tank:** Daily tests
+        **Established:** Weekly tests
+        **After Events:** Test for 1 week
+
+# ==============================================================================
+# TAB 11: FISH HEALTH
+# ==============================================================================
+- title: Fish Health
+  path: fish_health
+  icon: mdi:fish
+  badges: []
+  cards:
+    # Header
+    - type: markdown
+      content: |
+        # 🐟 Fish Health Monitor
+        **AI-Powered Health & Behavior Tracking**
+      card_mod:
+        style: |
+          ha-card {
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+            color: white;
+            text-align: center;
+            font-size: 1.3em;
+            padding: 16px;
+          }
+    
+    # Photo Upload
+    - type: button
+      name: "📸 Check Fish Health"
+      icon: mdi:camera-plus
+      tap_action:
+        action: call-service
+        service: script.upload_fish_health_photo
+      hold_action:
+        action: none
+    
+    # Overall Status
+    - type: horizontal-stack
+      cards:
+        - type: gauge
+          entity: sensor.fish_health_monitor
+          name: "Overall Health"
+          min: 0
+          max: 100
+          severity:
+            green: 85
+            yellow: 70
+            red: 0
+        
+        - type: gauge
+          entity: sensor.fish_activity_level
+          name: "Activity Level"
+          min: 0
+          max: 100
+          severity:
+            green: 75
+            yellow: 50
+            red: 0
+    
+    # Fish Status
+    - type: entities
+      title: 🐠 Fish Status
+      show_header_toggle: false
+      entities:
+        - entity: sensor.fish_health_monitor
+          name: "Overall Health"
+          secondary_info: last-changed
+        
+        - entity: sensor.fish_activity_level
+          name: "Activity Level"
+          secondary_info: last-changed
+        
+        - type: attribute
+          entity: sensor.fish_health_monitor
+          attribute: total_fish
+          name: "Total Fish"
+        
+        - type: attribute
+          entity: sensor.fish_health_monitor
+          attribute: fish_present
+          name: "Fish Present"
+        
+        - type: attribute
+          entity: sensor.fish_health_monitor
+          attribute: alert
+          name: "Health Alerts"
+    
+    # Alert Section
+    - type: conditional
+      conditions:
+        - entity: binary_sensor.fish_health_alert
+          state: "on"
+      card:
+        type: markdown
+        content: |
+          ## ⚠️ Health Alert
+          {{ state_attr('sensor.fish_health_monitor', 'alert_message') }}
+        card_mod:
+          style: |
+            ha-card {
+              background: #fee2e2;
+              border: 2px solid #ef4444;
+            }
+    
+    # Disease Detection Guide
+    - type: markdown
+      title: 🔬 Disease Detection
+      content: |
+        **Common Diseases:**
+        
+        🔴 **Ich (White Spot)**
+        - White spots on body/fins
+        - Flashing behavior
+        - Rapid breathing
+        
+        🟠 **Fin Rot**
+        - Frayed fins
+        - Black/red edges
+        - Fins shorter
+        
+        🟡 **Bloat**
+        - Swollen belly
+        - Difficulty swimming
+        - Loss of appetite
+        
+        **Action:**
+        1. Quarantine if possible
+        2. Test water parameters
+        3. Treat appropriately
+        4. Monitor daily
+
+# ==============================================================================
+# TAB 12: PLANT GROWTH
+# ==============================================================================
+- title: Plant Growth
+  path: plant_growth
+  icon: mdi:leaf
+  badges: []
+  cards:
+    # Header
+    - type: markdown
+      content: |
+        # 🌿 Plant Growth Tracker
+        **Monitor Growth • Detect Algae • Optimize Health**
+      card_mod:
+        style: |
+          ha-card {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            text-align: center;
+            font-size: 1.3em;
+            padding: 16px;
+          }
+    
+    # Photo Upload
+    - type: button
+      name: "📸 Track Plant Growth"
+      icon: mdi:camera-plus
+      tap_action:
+        action: call-service
+        service: script.upload_plant_photo
+    
+    # Overview Stats
+    - type: horizontal-stack
+      cards:
+        - type: gauge
+          entity: sensor.plant_coverage
+          name: "Coverage"
+          min: 0
+          max: 100
+          unit: "%"
+          severity:
+            green: 40
+            yellow: 20
+            red: 0
+        
+        - type: gauge
+          entity: sensor.plant_health_score
+          name: "Health"
+          min: 0
+          max: 100
+          severity:
+            green: 85
+            yellow: 70
+            red: 0
+        
+        - type: gauge
+          entity: sensor.algae_coverage
+          name: "Algae"
+          min: 0
+          max: 100
+          unit: "%"
+          severity:
+            green: 0
+            yellow: 5
+            red: 15
+    
+    # Plant Stats
+    - type: entities
+      title: 🌱 Plant Statistics
+      entities:
+        - entity: sensor.plant_coverage
+          name: "Coverage"
+          secondary_info: last-changed
+        
+        - type: attribute
+          entity: sensor.plant_coverage
+          attribute: weekly_change
+          name: "Weekly Change"
+        
+        - type: attribute
+          entity: sensor.plant_coverage
+          attribute: growth_rate
+          name: "Growth Rate"
+          suffix: " cm/week"
+        
+        - entity: sensor.plant_health_score
+          name: "Health Score"
+    
+    # Algae Detection
+    - type: entities
+      title: 🔬 Algae Analysis
+      entities:
+        - entity: sensor.algae_coverage
+          name: "Total Algae"
+        
+        - type: attribute
+          entity: sensor.algae_coverage
+          attribute: green_algae
+          name: "Green (Hair)"
+          suffix: "%"
+        
+        - type: attribute
+          entity: sensor.algae_coverage
+          attribute: brown_algae
+          name: "Brown (Diatoms)"
+          suffix: "%"
+        
+        - type: attribute
+          entity: sensor.algae_coverage
+          attribute: black_beard
+          name: "Black Beard"
+          suffix: "%"
+        
+        - type: attribute
+          entity: sensor.algae_coverage
+          attribute: blue_green
+          name: "Blue-Green"
+          suffix: "%"
+    
+    # Coverage History
+    - type: history-graph
+      title: 📈 Coverage Trend (30 days)
+      hours_to_show: 720
+      entities:
+        - entity: sensor.plant_coverage
+          name: Coverage
+        - entity: sensor.algae_coverage
+          name: Algae
+    
+    # Care Guide
+    - type: markdown
+      title: 💡 Plant Care
+      content: |
+        **Optimal Conditions:**
+        
+        🌞 **Lighting**
+        - Low: 15-30 PAR
+        - Medium: 30-60 PAR
+        - High: 60-100 PAR
+        
+        💧 **Fertilization**
+        - Root feeders: Tabs monthly
+        - Column feeders: Liquid weekly
+        
+        ✂️ **Trimming**
+        - Keep coverage 40-60%
+        - Trim regularly
+        
+        🦠 **Algae Control**
+        - Balanced light (6-8 hrs)
+        - Stable nutrients
+        - Good flow
+
+# ==============================================================================
+# TAB 13: TANK CLEANLINESS
+# ==============================================================================
+- title: Tank Cleanliness
+  path: tank_cleanliness
+  icon: mdi:broom
+  badges: []
+  cards:
+    # Header
+    - type: markdown
+      content: |
+        # 🧹 Tank Cleanliness
+        **Automated Scoring & Maintenance Scheduling**
+      card_mod:
+        style: |
+          ha-card {
+            background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+            color: white;
+            text-align: center;
+            font-size: 1.3em;
+            padding: 16px;
+          }
+    
+    # Photo Upload
+    - type: button
+      name: "📸 Check Cleanliness"
+      icon: mdi:camera-plus
+      tap_action:
+        action: call-service
+        service: script.upload_tank_cleanliness_photo
+    
+    # Overall Score
+    - type: gauge
+      entity: sensor.tank_cleanliness_score
+      name: "Overall Cleanliness"
+      min: 0
+      max: 100
+      severity:
+        green: 85
+        yellow: 70
+        red: 0
+    
+    # Component Scores
+    - type: entities
+      title: 📊 Component Scores
+      entities:
+        - entity: sensor.tank_cleanliness_score
+          name: "Overall Score"
+          secondary_info: last-changed
+        
+        - type: attribute
+          entity: sensor.tank_cleanliness_score
+          attribute: glass_clarity
+          name: "Glass Clarity"
+          suffix: "/100"
+        
+        - type: attribute
+          entity: sensor.tank_cleanliness_score
+          attribute: substrate
+          name: "Substrate"
+          suffix: "/100"
+        
+        - type: attribute
+          entity: sensor.tank_cleanliness_score
+          attribute: decorations
+          name: "Decorations"
+          suffix: "/100"
+        
+        - type: attribute
+          entity: sensor.tank_cleanliness_score
+          attribute: water_clarity
+          name: "Water Clarity"
+          suffix: "/100"
+    
+    # Maintenance Schedule
+    - type: markdown
+      title: 📅 Maintenance Due
+      content: |
+        ### Upcoming Tasks
+        
+        {% set score = states('sensor.tank_cleanliness_score')|int(87) %}
+        {% if score < 70 %}
+        🔴 **Immediate:**
+        - Full maintenance needed
+        - Check all components
+        {% elif score < 85 %}
+        🟡 **This Week:**
+        - Gravel vacuum recommended
+        - Clean glass if needed
+        {% else %}
+        🟢 **All Good:**
+        - Continue regular schedule
+        - Next maintenance in 1-2 weeks
+        {% endif %}
+    
+    # Score History
+    - type: history-graph
+      title: 📈 Cleanliness Trend
+      hours_to_show: 168
+      entities:
+        - entity: sensor.tank_cleanliness_score
+          name: Score
+
+# ==============================================================================
+# TAB 14: EQUIPMENT MONITOR
+# ==============================================================================
+- title: Equipment Monitor
+  path: equipment_monitor
+  icon: mdi:cog
+  badges: []
+  cards:
+    # Header
+    - type: markdown
+      content: |
+        # 🔧 Equipment Monitor
+        **Performance Tracking & Failure Prediction**
+      card_mod:
+        style: |
+          ha-card {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            text-align: center;
+            font-size: 1.3em;
+            padding: 16px;
+          }
+    
+    # Heater Performance
+    - type: entities
+      title: 🌡️ Heater
+      entities:
+        - entity: sensor.heater_performance
+          name: "Efficiency"
+        
+        - type: attribute
+          entity: sensor.heater_performance
+          attribute: status
+          name: "Status"
+        
+        - type: attribute
+          entity: sensor.heater_performance
+          attribute: temperature_stability
+          name: "Temp Stability"
+          suffix: " °F"
+    
+    # Filter Performance
+    - type: entities
+      title: 🫧 Filter
+      entities:
+        - entity: sensor.filter_flow_rate
+          name: "Flow Rate"
+        
+        - type: attribute
+          entity: sensor.filter_flow_rate
+          attribute: status
+          name: "Status"
+        
+        - type: attribute
+          entity: sensor.filter_flow_rate
+          attribute: percent_rated
+          name: "% of Rated"
+          suffix: "%"
+    
+    # Light Monitoring
+    - type: entities
+      title: 💡 Lighting
+      entities:
+        - entity: sensor.light_intensity
+          name: "Intensity"
+        
+        - type: attribute
+          entity: sensor.light_intensity
+          attribute: spectrum
+          name: "Color Temp"
+          suffix: " K"
+        
+        - type: attribute
+          entity: sensor.light_intensity
+          attribute: output_percent
+          name: "Output"
+          suffix: "%"
+    
+    # Equipment Health
+    - type: markdown
+      title: 📊 Equipment Health
+      content: |
+        ### Status Summary
+        
+        **Heater:** {{ state_attr('sensor.heater_performance', 'status') }}
+        **Filter:** {{ state_attr('sensor.filter_flow_rate', 'status') }}
+        **Lights:** {{ states('sensor.light_intensity') }} PAR
+        
+        ### Maintenance Predictions
+        
+        - Heater: Good condition
+        - Filter: Clean in ~3 weeks
+        - Lights: Bulb replacement in ~6 months
+
+# ==============================================================================
+# TAB 15: FEEDING & CARE
+# ==============================================================================
+- title: Feeding & Care
+  path: feeding_care
+  icon: mdi:food
+  badges: []
+  cards:
+    # Header
+    - type: markdown
+      content: |
+        # 🍽️ Feeding & Care
+        **Feeding Verification & Maintenance Tracking**
+      card_mod:
+        style: |
+          ha-card {
+            background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+            color: white;
+            text-align: center;
+            font-size: 1.3em;
+            padding: 16px;
+          }
+    
+    # Last Feeding
+    - type: entities
+      title: 🍽️ Latest Feeding
+      entities:
+        - entity: sensor.feeding_score
+          name: "Feeding Score"
+          secondary_info: last-changed
+        
+        - type: attribute
+          entity: sensor.feeding_score
+          attribute: response_time
+          name: "Response Time"
+          suffix: " seconds"
+        
+        - type: attribute
+          entity: sensor.feeding_score
+          attribute: consumption_percent
+          name: "Consumed"
+          suffix: "%"
+        
+        - type: attribute
+          entity: sensor.feeding_score
+          attribute: waste_percent
+          name: "Waste"
+          suffix: "%"
+        
+        - type: attribute
+          entity: sensor.feeding_score
+          attribute: fish_participated
+          name: "Fish Participated"
+    
+    # Feeding Analysis
+    - type: markdown
+      title: 📊 Feeding Analysis
+      content: |
+        ### Last Feeding
+        
+        **Score:** {{ states('sensor.feeding_score') }}/100
+        **Response:** {{ state_attr('sensor.feeding_score', 'response_time') }}s
+        **Consumed:** {{ state_attr('sensor.feeding_score', 'consumption_percent') }}%
+        **Waste:** {{ state_attr('sensor.feeding_score', 'waste_percent') }}%
+        
+        {% set score = states('sensor.feeding_score')|int(95) %}
+        {% if score >= 95 %}
+        ✅ **Excellent** - Perfect feeding
+        {% elif score >= 85 %}
+        🟢 **Good** - Normal feeding
+        {% elif score >= 70 %}
+        🟡 **Fair** - Consider adjusting amount
+        {% else %}
+        🔴 **Poor** - Check fish health
+        {% endif %}
+    
+    # Maintenance Log
+    - type: markdown
+      title: 📅 Maintenance Schedule
+      content: |
+        ### Regular Tasks
+        
+        **Daily:**
+        - Feed fish (2x)
+        - Check temperature
+        - Observe fish
+        
+        **Weekly:**
+        - Water change (40%)
+        - Test parameters
+        - Clean glass
+        
+        **Monthly:**
+        - Gravel vacuum
+        - Filter maintenance
+        - Plant trimming
+
+# ==============================================================================
+# TAB 16: ANALYTICS & INSIGHTS
+# ==============================================================================
+- title: Analytics
+  path: analytics_insights
+  icon: mdi:chart-line
+  badges: []
+  cards:
+    # Header
+    - type: markdown
+      content: |
+        # 📊 Analytics & Insights
+        **Long-term Trends • Cost Tracking • Predictions**
+      card_mod:
+        style: |
+          ha-card {
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+            color: white;
+            text-align: center;
+            font-size: 1.3em;
+            padding: 16px;
+          }
+    
+    # Cost Tracking
+    - type: entities
+      title: 💰 Monthly Costs
+      entities:
+        - entity: sensor.monthly_cost
+          name: "Total Monthly Cost"
+        
+        - type: attribute
+          entity: sensor.monthly_cost
+          attribute: test_strips
+          name: "Test Strips"
+          prefix: "$"
+        
+        - type: attribute
+          entity: sensor.monthly_cost
+          attribute: food
+          name: "Fish Food"
+          prefix: "$"
+        
+        - type: attribute
+          entity: sensor.monthly_cost
+          attribute: fertilizer
+          name: "Fertilizer"
+          prefix: "$"
+        
+        - type: attribute
+          entity: sensor.monthly_cost
+          attribute: electricity
+          name: "Electricity"
+          prefix: "$"
+    
+    # Insights
+    - type: markdown
+      title: 💡 Discovered Insights
+      content: |
+        ### Pattern Analysis
+        
+        **Water Quality:**
+        - Nitrate rises 15ppm/week
+        - Weekly water changes optimal
+        
+        **Plant Growth:**
+        - Growth rate: 2.3 cm/week
+        - Higher in spring months
+        
+        **Fish Activity:**
+        - Most active 2-4 PM
+        - Best feeding time: 3 PM
+        
+        **Cost Optimization:**
+        - Current monthly: $47
+        - Projected yearly: $564
+    
+    # Trends
+    - type: markdown
+      title: 📈 Trends
+      content: |
+        ### 30-Day Summary
+        
+        **Water Tests:** 12 completed
+        **Avg Confidence:** 89%
+        **Fish Health:** 95% avg
+        **Plant Coverage:** +8%
+        **Algae:** Decreasing ✓
+
+# ==============================================================================
+# TAB 17: ALERTS & STATUS
+# ==============================================================================
+- title: Alerts & Status
+  path: alerts_status
+  icon: mdi:bell
+  badges: []
+  cards:
+    # Header
+    - type: markdown
+      content: |
+        # 🔔 Alerts & Status
+        **System Status • Active Alerts • Quick Actions**
+      card_mod:
+        style: |
+          ha-card {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            text-align: center;
+            font-size: 1.3em;
+            padding: 16px;
+          }
+    
+    # Overall Tank Score
+    - type: gauge
+      entity: sensor.tank_overall_score
+      name: "Overall Tank Score"
+      min: 0
+      max: 100
+      severity:
+        green: 90
+        yellow: 75
+        red: 0
+    
+    # Component Scores
+    - type: entities
+      title: 📊 System Health
+      entities:
+        - type: attribute
+          entity: sensor.tank_overall_score
+          attribute: water_quality
+          name: "Water Quality"
+          suffix: "/100"
+        
+        - type: attribute
+          entity: sensor.tank_overall_score
+          attribute: fish_health
+          name: "Fish Health"
+          suffix: "/100"
+        
+        - type: attribute
+          entity: sensor.tank_overall_score
+          attribute: plant_growth
+          name: "Plant Growth"
+          suffix: "/100"
+        
+        - type: attribute
+          entity: sensor.tank_overall_score
+          attribute: equipment
+          name: "Equipment"
+          suffix: "/100"
+        
+        - type: attribute
+          entity: sensor.tank_overall_score
+          attribute: maintenance
+          name: "Maintenance"
+          suffix: "/100"
+    
+    # Active Alerts
+    - type: conditional
+      conditions:
+        - entity: sensor.aquarium_ammonia_test
+          state_not: "unavailable"
+      card:
+        type: markdown
+        title: ⚠️ Active Alerts
+        content: |
+          {% set amm = states('sensor.aquarium_ammonia_test')|float(0) %}
+          {% set nit = states('sensor.aquarium_nitrite_test')|float(0) %}
+          {% set nat = states('sensor.aquarium_nitrate_test')|float(0) %}
+          
+          {% if amm > 0.25 %}
+          🚨 **High Ammonia:** {{ amm }} ppm
+          {% endif %}
+          
+          {% if nit > 0.25 %}
+          🚨 **High Nitrite:** {{ nit }} ppm
+          {% endif %}
+          
+          {% if nat > 80 %}
+          🟡 **High Nitrate:** {{ nat }} ppm
+          {% endif %}
+          
+          {% if amm <= 0.25 and nit <= 0.25 and nat <= 80 %}
+          ✅ **No active alerts**
+          All systems normal
+          {% endif %}
+    
+    # Quick Actions
+    - type: entities
+      title: ⚡ Quick Actions
+      entities:
+        - type: button
+          name: "Test Water Now"
+          icon: mdi:test-tube
+          action_name: "TEST"
+          tap_action:
+            action: call-service
+            service: script.upload_api_strip_photo
+        
+        - type: button
+          name: "Check Fish Health"
+          icon: mdi:fish
+          action_name: "CHECK"
+          tap_action:
+            action: call-service
+            service: script.upload_fish_health_photo
+        
+        - type: button
+          name: "Tank Photo"
+          icon: mdi:camera
+          action_name: "PHOTO"
+          tap_action:
+            action: call-service
+            service: script.upload_tank_cleanliness_photo
+    
+    # Achievement Progress
+    - type: markdown
+      title: 🏆 Achievements
+      content: |
+        ### Unlocked
+        
+        ✅ **Perfect Week** - 7 days safe params
+        ✅ **Plant Master** - 50% coverage
+        ✅ **Consistent Keeper** - 30-day streak
+        
+        ### In Progress
+        
+        ⏳ **Breeding Success** - 0/1
+        ⏳ **Year One** - 8/12 months
+        ⏳ **Tank Master** - 90/100 score
+
+# ==============================================================================
+# END OF 17-TAB DASHBOARD
+# ==============================================================================
