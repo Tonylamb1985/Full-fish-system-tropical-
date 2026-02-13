@@ -1,0 +1,88 @@
+# Aquarium Automations
+
+automation:
+  - alias: "Water Test - Badge Uploaded"
+    id: aquarium_badge_uploaded
+    trigger:
+      - platform: event
+        event_type: mobile_app_notification_action
+        event_data:
+          action: upload_badge_photo
+    action:
+      - service: mqtt.publish
+        data:
+          topic: "aquarium/analyze/water_test"
+          payload: >
+            {
+              "image_path": "/media/aquarium_photos/latest.jpg",
+              "analysis_type": "water_test",
+              "test_type": "badge",
+              "timestamp": "{{ now().isoformat() }}"
+            }
+  
+  - alias: "Water Test - Strip Uploaded"
+    id: aquarium_strip_uploaded
+    trigger:
+      - platform: event
+        event_type: mobile_app_notification_action
+        event_data:
+          action: upload_strip_photo
+    action:
+      - service: mqtt.publish
+        data:
+          topic: "aquarium/analyze/water_test"
+          payload: >
+            {
+              "image_path": "/media/aquarium_photos/latest.jpg",
+              "analysis_type": "water_test",
+              "test_type": "api_strip",
+              "timestamp": "{{ now().isoformat() }}"
+            }
+  
+  - alias: "Fish Health - Photo Uploaded"
+    id: aquarium_fish_uploaded
+    trigger:
+      - platform: event
+        event_type: mobile_app_notification_action
+        event_data:
+          action: upload_fish_photo
+    action:
+      - service: mqtt.publish
+        data:
+          topic: "aquarium/analyze/fish_health"
+          payload: >
+            {
+              "image_path": "/media/aquarium_photos/latest.jpg",
+              "analysis_type": "fish_health",
+              "timestamp": "{{ now().isoformat() }}"
+            }
+  
+  - alias: "HIGH AMMONIA ALERT"
+    id: aquarium_ammonia_alert
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.aquarium_ammonia_test
+        above: 0.25
+    action:
+      - service: notify.mobile_app_YOUR_PHONE
+        data:
+          title: "🚨 HIGH AMMONIA - DANGER!"
+          message: "Ammonia: {{ states('sensor.aquarium_ammonia_test') }} ppm - IMMEDIATE WATER CHANGE NEEDED!"
+          data:
+            priority: high
+            ttl: 0
+  
+  - alias: "HIGH NITRITE ALERT"
+    id: aquarium_nitrite_alert
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.aquarium_nitrite_test
+        above: 0.25
+    action:
+      - service: notify.mobile_app_YOUR_PHONE
+        data:
+          title: "🚨 HIGH NITRITE - DANGER!"
+          message: "Nitrite: {{ states('sensor.aquarium_nitrite_test') }} ppm - IMMEDIATE WATER CHANGE NEEDED!"
+          data:
+            priority: high
+            ttl: 0

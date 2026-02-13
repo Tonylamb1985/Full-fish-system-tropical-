@@ -1,0 +1,80 @@
+# Aquarium Scripts - Photo Uploads
+
+script:
+  upload_ammonia_badge_photo:
+    alias: "Upload Ammonia Badge Photo"
+    sequence:
+      - service: notify.mobile_app_YOUR_PHONE
+        data:
+          title: "📸 Ammonia Badge"
+          message: "Take photo of Seachem badge in tank"
+          data:
+            actions:
+              - action: "upload_badge_photo"
+                title: "Take Photo"
+                camera: true
+  
+  upload_api_strip_photo:
+    alias: "Upload API Strip Photo"
+    sequence:
+      - service: notify.mobile_app_YOUR_PHONE
+        data:
+          title: "📸 API Test Strip"
+          message: "Take photo of API 5-in-1 strip"
+          data:
+            actions:
+              - action: "upload_strip_photo"
+                title: "Take Photo"
+                camera: true
+  
+  upload_ntlabs_tubes_photo:
+    alias: "Upload NT Labs Tubes Photo"
+    sequence:
+      - service: notify.mobile_app_YOUR_PHONE
+        data:
+          title: "📸 NT Labs Tubes"
+          message: "Take photo of test tubes in rack"
+          data:
+            actions:
+              - action: "upload_tubes_photo"
+                title: "Take Photo"
+                camera: true
+  
+  upload_fish_health_photo:
+    alias: "Upload Fish Health Photo"
+    sequence:
+      - service: notify.mobile_app_YOUR_PHONE
+        data:
+          title: "📸 Fish Health"
+          message: "Take photo of fish for health analysis"
+          data:
+            actions:
+              - action: "upload_fish_photo"
+                title: "Take Photo"
+                camera: true
+  
+  upload_plant_photo:
+    alias: "Upload Plant Growth Photo"
+    sequence:
+      - service: notify.mobile_app_YOUR_PHONE
+        data:
+          title: "📸 Plant Growth"
+          message: "Take daily plant photo"
+          data:
+            actions:
+              - action: "upload_plant_photo"
+                title: "Take Photo"
+                camera: true
+  
+  upload_tank_cleanliness_photo:
+    alias: "Upload Tank Cleanliness Photo"
+    sequence:
+      - service: notify.mobile_app_YOUR_PHONE
+        data:
+          title: "📸 Tank Cleanliness"
+          message: "Take photo for cleanliness analysis"
+          data:
+            actions:
+              - action: "upload_clean_photo"
+                title: "Take Photo"
+                camera: true

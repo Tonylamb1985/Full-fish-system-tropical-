@@ -1,0 +1,148 @@
+# ==============================================================================
+# Aquarium Monitoring - MQTT Sensors
+# ==============================================================================
+# All sensors for water testing, fish, plants, equipment
+# Auto-loaded via packages in configuration.yaml
+
+mqtt:
+  sensor:
+    # === WATER TESTING ===
+    - name: "Aquarium Ammonia Test"
+      state_topic: "aquarium/water_test/ammonia"
+      value_template: "{{ value_json.value }}"
+      unit_of_measurement: "ppm"
+      icon: mdi:molecule
+      json_attributes_topic: "aquarium/water_test/ammonia"
+    
+    - name: "Aquarium Nitrite Test"
+      state_topic: "aquarium/water_test/nitrite"
+      value_template: "{{ value_json.value }}"
+      unit_of_measurement: "ppm"
+      icon: mdi:water-alert-outline
+      json_attributes_topic: "aquarium/water_test/nitrite"
+    
+    - name: "Aquarium Nitrate Test"
+      state_topic: "aquarium/water_test/nitrate"
+      value_template: "{{ value_json.value }}"
+      unit_of_measurement: "ppm"
+      icon: mdi:water-outline
+      json_attributes_topic: "aquarium/water_test/nitrate"
+    
+    - name: "Aquarium pH Test"
+      state_topic: "aquarium/water_test/ph"
+      value_template: "{{ value_json.value }}"
+      icon: mdi:ph
+      json_attributes_topic: "aquarium/water_test/ph"
+    
+    - name: "Aquarium KH Test"
+      state_topic: "aquarium/water_test/kh"
+      value_template: "{{ value_json.value }}"
+      unit_of_measurement: "ppm"
+      icon: mdi:water-plus-outline
+      json_attributes_topic: "aquarium/water_test/kh"
+    
+    - name: "Aquarium GH Test"
+      state_topic: "aquarium/water_test/gh"
+      value_template: "{{ value_json.value }}"
+      unit_of_measurement: "ppm"
+      icon: mdi:water-check-outline
+      json_attributes_topic: "aquarium/water_test/gh"
+    
+    - name: "Water Test Confidence"
+      state_topic: "aquarium/water_test/results"
+      value_template: "{{ value_json.overall_confidence }}"
+      unit_of_measurement: "%"
+      icon: mdi:gauge
+      json_attributes_topic: "aquarium/water_test/results"
+    
+    # === FISH HEALTH ===
+    - name: "Fish Health Monitor"
+      state_topic: "aquarium/fish/health"
+      value_template: "{{ value_json.overall_health }}"
+      unit_of_measurement: "%"
+      icon: mdi:fish
+      json_attributes_topic: "aquarium/fish/health"
+    
+    - name: "Fish Activity Level"
+      state_topic: "aquarium/fish/activity"
+      value_template: "{{ value_json.activity_level }}"
+      unit_of_measurement: "%"
+      icon: mdi:run
+    
+    # === PLANT GROWTH ===
+    - name: "Plant Coverage"
+      state_topic: "aquarium/plants/coverage"
+      value_template: "{{ value_json.coverage_percent }}"
+      unit_of_measurement: "%"
+      icon: mdi:percent
+      json_attributes_topic: "aquarium/plants/coverage"
+    
+    - name: "Plant Health Score"
+      state_topic: "aquarium/plants/health"
+      value_template: "{{ value_json.health_score }}"
+      unit_of_measurement: "/100"
+      icon: mdi:heart-pulse
+    
+    - name: "Algae Coverage"
+      state_topic: "aquarium/plants/algae"
+      value_template: "{{ value_json.total_coverage }}"
+      unit_of_measurement: "%"
+      icon: mdi:water-alert
+      json_attributes_topic: "aquarium/plants/algae"
+    
+    # === CLEANLINESS ===
+    - name: "Tank Cleanliness Score"
+      state_topic: "aquarium/cleanliness/score"
+      value_template: "{{ value_json.overall_score }}"
+      unit_of_measurement: "/100"
+      icon: mdi:broom
+      json_attributes_topic: "aquarium/cleanliness/score"
+    
+    # === EQUIPMENT ===
+    - name: "Heater Performance"
+      state_topic: "aquarium/equipment/heater"
+      value_template: "{{ value_json.efficiency }}"
+      unit_of_measurement: "%"
+      icon: mdi:thermometer
+      json_attributes_topic: "aquarium/equipment/heater"
+    
+    - name: "Filter Flow Rate"
+      state_topic: "aquarium/equipment/filter"
+      value_template: "{{ value_json.flow_rate }}"
+      unit_of_measurement: "GPH"
+      icon: mdi:air-filter
+      json_attributes_topic: "aquarium/equipment/filter"
+    
+    - name: "Light Intensity"
+      state_topic: "aquarium/equipment/light"
+      value_template: "{{ value_json.intensity }}"
+      unit_of_measurement: "PAR"
+      icon: mdi:lightbulb
+      json_attributes_topic: "aquarium/equipment/light"
+    
+    # === FEEDING ===
+    - name: "Feeding Score"
+      state_topic: "aquarium/feeding/latest"
+      value_template: "{{ value_json.score }}"
+      unit_of_measurement: "/100"
+      icon: mdi:food
+      json_attributes_topic: "aquarium/feeding/latest"
+    
+    # === OVERALL STATUS ===
+    - name: "Tank Overall Score"
+      state_topic: "aquarium/status/overall"
+      value_template: "{{ value_json.total_score | default(95) }}"
+      unit_of_measurement: "/100"
+      icon: mdi:fish-tank
+      json_attributes_topic: "aquarium/status/overall"
+
+  binary_sensor:
+    - name: "Fish Health Alert"
+      state_topic: "aquarium/fish/health"
+      value_template: >
+        {% if value_json.alert is defined and value_json.alert != 'none' %}
+          on
+        {% else %}
+          off
+        {% endif %}
+      device_class: problem
